@@ -5,14 +5,10 @@ import sys
 import threading
 from adafruit_servokit import ServoKit  # Set channels to the number of servo channels on your kit.
 from smbus import SMBus
-import copy
-import time
 kit = ServoKit(channels=8) # 8 servo connectors on the robot
 kit.frequency = 50
 
 distance = 30
-
-DIST_TO_STOP = 75
 
 
 serialPort = serial.Serial(port = "/dev/ttyS0", baudrate=38400,
@@ -52,21 +48,14 @@ def stop():
 signal.signal(signal.SIGINT, sigint_handler)
 
 def drive():
-    dist = [0,0,0]
-    old_time = 0
+    
     while True:
         global distance
-        if (time.time() - old_time) >0.1:
-            dist.append(distance)
-            dist = dist[1:]
-            old_time = time.time()
-        
-        #print(distance,"lowest")
-        print(dist)
-        if dist[0] <DIST_TO_STOP and dist[1] <DIST_TO_STOP and dist[2] < DIST_TO_STOP:
+        print(distance,"lowest")
+        if distance < 20:
             stop()
             drive_reverse(0.2)
-            drive_left(0.2)
+            drive_left(0.1)
 
         else:
             drive_forward(0.1)
@@ -74,12 +63,12 @@ def drive():
 
 def move_servo():
     while 1:
-        counter = 165
-        for x in range(55,165):
+        counter = 144
+        for x in range(72,144):
             kit.servo[0].angle = x  # Servo in slot 1 on robot
             kit.servo[1].angle = x  # Servo in slot 1 on robot
             time.sleep(0.01)
-        for x in range(55,165):
+        for x in range(72,144):
             counter -=1
             kit.servo[0].angle = counter  # Servo in slot 1 on robot
             kit.servo[1].angle = counter  # Servo in slot 1 on robot
@@ -104,13 +93,13 @@ def find_distance():
         time.sleep(0.05)
         high2 = i2c_bus.read_byte_data(i2c_address2, 2)  # Read the high byte of the value
         time.sleep(0.05)
-
+        #print(high) # print the value of High byte
 
         low1 = i2c_bus.read_byte_data(i2c_address1, 3)  # Read the low byte of the value
         time.sleep(0.05)
         low2 = i2c_bus.read_byte_data(i2c_address2, 3)  # Read the low byte of the value
         time.sleep(0.05)
-
+        #print(low) # print the value of low byte
 
         current_value1 = high1 * 256 + low1 
         current_value2 = high2 * 256 + low2
